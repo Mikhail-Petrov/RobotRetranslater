@@ -120,7 +120,7 @@ public class Retranslater implements iKPIC_subscribeHandler2 {
     //    Направление второго робота
     private int curAngle = 0;
     //    Расстояние от препятствия, на котором следует изучать его
-    private final int deltaX = 250, deltaY = -200;
+    private final int deltaX = 450, deltaY = -200;
 
     //    Конструктор
     Retranslater() {
@@ -131,7 +131,7 @@ public class Retranslater implements iKPIC_subscribeHandler2 {
      * Подключиться к роботу, занести данные в SS.
      */
     void start() {
-        boolean robo1 = false, robo2 = false;
+        boolean robo1 = true, robo2 = true;
         if (!robo1 && !robo2) {
 //            analyseLearning2();
             connectTry();
@@ -514,6 +514,7 @@ public class Retranslater implements iKPIC_subscribeHandler2 {
                 smartSpaceKPI.remove(new SmartSpaceTriplet(robot2Name, null, null));
                 smartSpaceKPI.remove(new SmartSpaceTriplet(null, blockPredicate, null));
                 smartSpaceKPI.remove(new SmartSpaceTriplet(null, needPredicate, null));
+                smartSpaceKPI.remove(new SmartSpaceTriplet(null, "event", null));
                 smartSpaceKPI.leave();
             } catch (SmartSpaceException e) {
                 e.printStackTrace();
@@ -574,13 +575,7 @@ public class Retranslater implements iKPIC_subscribeHandler2 {
             if (minDiff <= minimalDifference) {
                 System.out.println(String.format("The closest obstacle (difference = \t%d\t):\n%s",
                         minDiff, templateBD.get(templateIndex).getObject()));
-                Vector<SmartSpaceTriplet> obstInfo = smartSpaceKPI.query(
-                        new SmartSpaceTriplet(obstacleObject, templateBDPredicate, null));
-                if (obstInfo.size() > 0) {
-                    String obstTemplate = obstInfo.get(0).getObject();
-
-                    return obstTemplate;
-                }
+                return templateBD.get(templateIndex).getObject();
 //                TODO: применить шаблон
             } else {
                 System.out.println("Unknown obstacle:\n" + obstacleObject);
@@ -713,15 +708,17 @@ public class Retranslater implements iKPIC_subscribeHandler2 {
                     try {
                         Vector<SmartSpaceTriplet> query = smartSpaceKPI.query(
                                 new SmartSpaceTriplet(acrossFun, acrossTypePredicate, null));
-                        if (!query.isEmpty())
+                        if (!query.isEmpty()) {
                             acrossType = query.get(0).getObject();
+                            smartSpaceKPI.remove(query.firstElement());
+                        }
                         if (acrossType == null)
                             acrossType = "";
                     } catch (SmartSpaceException e) {
                         e.printStackTrace();
                     }
                     if (acrossType.isEmpty())
-                        LCD.drawString("I do not know how to climb it.", 1, 1);
+                        System.out.println("I do not know how to climb it.");
                     else {
                         delays.add(0L);
                         commands.add(commandClimb + "\t" + acrossType);
