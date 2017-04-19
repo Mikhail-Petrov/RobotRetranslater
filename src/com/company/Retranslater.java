@@ -48,12 +48,12 @@ public class Retranslater implements iKPIC_subscribeHandler2 {
     private final String subscribePredicate = "task";
     private final String subscribeObject = null;
     //    Названия объектов робота, заносимые в SS
-    private final String backMotorName = "backBlock";
-    private final String middleMotorName = "middleBlock";
-    private final String forwardMotorName = "frontBlock";
-    //    private final String backMotorName = "block0";
-//    private final String middleMotorName = "block1";
-//    private final String forwardMotorName = "block2";
+//    private final String backMotorName = "backBlock";
+//    private final String middleMotorName = "middleBlock";
+//    private final String forwardMotorName = "frontBlock";
+    private final String backMotorName = "block0";
+    private final String middleMotorName = "block1";
+    private final String forwardMotorName = "block2";
     private final String robotName = "robot1";
     private final String robot2Name = "robot2";
     //    private final String robotName = "robot";
@@ -78,7 +78,7 @@ public class Retranslater implements iKPIC_subscribeHandler2 {
     private final String exploreFun = "exploreLocation";
     private final String photoFun = "takePhoto";
     private final String obstacleFun = "exploreObstacle";
-    private final String riseFun = "riseFirstBlock";
+    private final String riseFun = "rise";
     private final String learnFun = "learn";
 
     private final String needPredicate = "needs";
@@ -120,7 +120,7 @@ public class Retranslater implements iKPIC_subscribeHandler2 {
     //    Направление второго робота
     private int curAngle = 0;
     //    Расстояние от препятствия, на котором следует изучать его
-    private final int deltaX = 450, deltaY = -200;
+    private final int deltaX = 1, deltaY = -200;
 
     //    Конструктор
     Retranslater() {
@@ -131,11 +131,13 @@ public class Retranslater implements iKPIC_subscribeHandler2 {
      * Подключиться к роботу, занести данные в SS.
      */
     void start() {
-        boolean robo1 = true, robo2 = true;
+        boolean robo1 = true, robo2 = false;
         if (!robo1 && !robo2) {
 //            analyseLearning2();
-            connectTry();
-            accrossOld("93; 88; 103; 261; 261; 255; 264; 263; 257; 263; 264; 254; 263; 263; 253; 257; 263; 263; 253; 261; 261; 252; 260; 261; 262; 252; 261; 261; 252; 261; 261; 262; 141; 141; 144; 144; 131; 131; 142; 162; 154; 201; 206; 206; 206; 206; 206; 192; 125; 130; 262; 254; 257; 242; 142; 149; 179; 179; 166; 124; 135; 162; 155; 24; 24; 35");
+            String subject = "J|K";
+            String[] split = subject.split("\\|");
+//            accrossOld("93; 88; 103; 261; 261; 255; 264; 263; 257; 263; 264; 254; 263; 263; 253; 257; 263; 263; 253; 261; 261; 252; 260; 261; 262; 252; 261; 261; 252; 261; 261; 262; 141; 141; 144; 144; 131; 131; 142; 162; 154; 201; 206; 206; 206; 206; 206; 192; 125; 130; 262; 254; 257; 242; 142; 149; 179; 179; 166; 124; 135; 162; 155; 24; 24; 35");
+//            accrossOld("12; 10; 22; 120; 120; 171; 182; 182; 182; 182; 182; 176; 89; 121; 121; 112; 87; 87; 100; 137; 133; 107; 107; 116; 137; 137; 126; 79; 83; 89; 89; 101; 136; 136; 130; 136; 261; 261; 256; 258; 246; 230; 232; 262; 262; 256; 251; 261; 261; 260; 228; 231; 264; 264; 255; 255; 263; 263; 253; 254; 261; 256; 263; 263; 254");
             return;
         }
         try {
@@ -632,10 +634,15 @@ public class Retranslater implements iKPIC_subscribeHandler2 {
         for (Vector<String> tripletString : vector) {
             SmartSpaceTriplet triplet = new SmartSpaceTriplet(tripletString);
 //            Определить исполнителя
-            String execRobot = "";
+            String execRobot = "", execBlock = "";
             String task = triplet.getObject(), subject = triplet.getSubject();
 //            Если исполнитель задан явно, то отправить ему, иначе искать того, кто может
             boolean isMainRobot = true;
+            String[] split = subject.split("\\|");
+            subject = split[0];
+            if (split.length > 1)
+                execBlock = split[1];
+
             switch (subject) {
                 case robotName:
                     execRobot = host;
@@ -701,6 +708,7 @@ public class Retranslater implements iKPIC_subscribeHandler2 {
                     curAngle += 90;
                     curAngle %= 360;
                     break;
+
                 case acrossFun:
 //                    Thread acrossThread = new Thread(() -> accrossOld(true));
 //                    acrossThread.start();
@@ -724,6 +732,7 @@ public class Retranslater implements iKPIC_subscribeHandler2 {
                         commands.add(commandClimb + "\t" + acrossType);
                     }
                     break;
+
                 case goToFun:
                     goToCommand = getGoToCommand(task, isMainRobot, false);
                     for (String gtCom : goToCommand) {
@@ -800,7 +809,7 @@ public class Retranslater implements iKPIC_subscribeHandler2 {
             String allComs = "";
             for (int i = 0; i < commands.size(); i++)
                 if (!commands.get(i).isEmpty())
-                    allComs += String.format("%d\t%s\n", delays.get(i), commands.get(i));
+                    allComs += String.format("%d\t%s\t%s\n", delays.get(i), execBlock, commands.get(i));
             if (!allComs.isEmpty())
                 try {
                     if (outputStream != null && Objects.equals(execRobot, host))
